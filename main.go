@@ -1,110 +1,32 @@
 package main
 
 import (
-	"log"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/sync/errgroup"
 )
 
-var g errgroup.Group
-
-type Todo struct {
-	ID   int    `json:"id"`
-	Text string `json:"text"`
+// album represents data about a record album
+type album struct {
+	ID     string  `json:"id"`
+	Title  string  `json:"title"`
+	Artist string  `json:"artist"`
+	Price  float64 `json:"price"`
 }
 
-var todos []Todo
-
-func router01() http.Handler {
-	e := gin.New()
-	e.Use(gin.Recovery())
-	e.GET("/", func(c *gin.Context) {
-		c.JSON(
-			http.StatusOK,
-			gin.H{
-				"code":  http.StatusOK,
-				"error": "Welcome server 01",
-			},
-		)
-	})
-
-	return e
+var albums = []album{
+	{ID: "1", Title: "Blue Train", Artist: "John Coltrane", Price: 56.99},
+	{ID: "2", Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
+	{ID: "3", Title: "Sarah Vaughan and Clifford Brown", Price: 39.99},
 }
 
-func router02() http.Handler {
-	e := gin.New()
-	e.Use(gin.Recovery())
-	e.GET("/", func(c *gin.Context) {
-		c.JSON(
-			http.StatusOK,
-			gin.H{
-				"code":  http.StatusOK,
-				"error": "Welcome server 02",
-			},
-		)
-	})
-
-	return e
-}
-
-func router03() http.Handler {
-	e := gin.New()
-	e.Use(gin.Recovery())
-	e.GET("/", func(c *gin.Context) {
-		if len(todos) == 0 {
-			c.JSON(http.StatusNotFound, gin.H{"status": "Not Found"})
-			return
-		}
-		c.JSON(http.StatusOK, todos)
-	})
-	e.POST("/todos", func(c *gin.Context) {
-		var todo Todo
-		if err := c.BindJSON(&todo); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		todos = append(todos, todo)
-		c.JSON(http.StatusOK, todos)
-	})
-	return e
+func getAlbums(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, albums)
 }
 
 func main() {
-	server01 := &http.Server{
-		Addr:         ":8080",
-		Handler:      router01(),
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-	}
-	server02 := &http.Server{
-		Addr:         ":8081",
-		Handler:      router02(),
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-	}
-	server03 := &http.Server{
-		Addr:         ":8082",
-		Handler:      router03(),
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-	}
+	router := gin.Default()
+	router.GET("/albums", getAlbums)
 
-	g.Go(func() error {
-		return server01.ListenAndServe()
-	})
-
-	g.Go(func() error {
-		return server02.ListenAndServe()
-	})
-
-	g.Go(func() error {
-		return server03.ListenAndServe()
-	})
-
-	if err := g.Wait(); err != nil {
-		log.Fatal(err)
-	}
+	router.Run(":8080")
 }
