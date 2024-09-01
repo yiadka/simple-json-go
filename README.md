@@ -13,3 +13,4 @@
 - 作業開始
 - 以下のサイトに従って**GET**するAPIを構築
   - [GolangでシンプルなJSON APIを作る](https://zenn.dev/tatsurom/articles/golang-simple-json-api)
+  - [Gin チュートリアル](https://go.dev/doc/tutorial/web-service-gin)
