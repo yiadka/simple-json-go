@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -33,10 +34,13 @@ func TestGetAlbums(t *testing.T) {
 
 func TestPostAlbums(t *testing.T) {
 	gin.SetMode(gin.TestMode)
+
+	request_body := `{"ID":"4", "Title":"hoge", "Artist":"fuga", "Price": 10.00}`
+
 	r := gin.Default()
 	r.POST("/albums", postAlbums)
 
-	req, err := http.NewRequest(http.MethodPost, "/albums", nil)
+	req, err := http.NewRequest(http.MethodPost, "/albums", bytes.NewBufferString(request_body))
 	if err != nil {
 		t.Fatalf("Failed to create a request: %v", err)
 	}
@@ -44,9 +48,15 @@ func TestPostAlbums(t *testing.T) {
 
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusCreated, w.Code)
 
-	expectedBody := `[{"id":"4", "title":"hoge", "artist":"piyo", "price": 10.00}]`
+	expectedBody := `{"id":"4", "title":"hoge", "artist":"fuga", "price": 10.00}`
 
 	assert.JSONEq(t, expectedBody, w.Body.String())
+
+	assert.Equal(t, 4, len(albums))
+	assert.Equal(t, "4", albums[3].ID)
+	assert.Equal(t, "hoge", albums[3].Title)
+	assert.Equal(t, "fuga", albums[3].Artist)
+	assert.Equal(t, 10.00, albums[3].Price)
 }
