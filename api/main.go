@@ -49,10 +49,39 @@ func getAlbumById(c *gin.Context) {
 	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "album not found"})
 }
 
+func updateAlbum(c *gin.Context) {
+	var updatedAlbum album
+	id := c.Param("id")
+
+	if err := c.BindJSON(&updatedAlbum); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID is required"})
+		return
+	}
+
+	for i, a := range albums {
+		if a.ID == id {
+			updatedAlbum.ID = id
+			albums[i].Title = updatedAlbum.Title
+			albums[i].Artist = updatedAlbum.Artist
+			albums[i].Price = updatedAlbum.Price
+			c.JSON(http.StatusOK, albums[i])
+			return
+		}
+	}
+
+	c.JSON(http.StatusNotFound, gin.H{"error": "Album not found"})
+}
+
 func main() {
 	router := gin.Default()
 	router.GET("/albums", getAlbums)
 	router.GET("/albums/:id", getAlbumById)
+	router.PUT("/albums/:id", updateAlbum)
 	router.POST("/albums", postAlbums)
 
 	router.Run(":8080")
