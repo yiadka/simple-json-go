@@ -10,6 +10,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func setupDate() {
+	albums = []album{
+		{ID: "1", Title: "Old Album", Artist: "Artist 1", Price: 10.0},
+		{ID: "2", Title: "Another Album", Artist: "Artist 2", Price: 20.0},
+	}
+}
+
 func TestGetAlbums(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -59,4 +66,34 @@ func TestPostAlbums(t *testing.T) {
 	assert.Equal(t, "hoge", albums[3].Title)
 	assert.Equal(t, "fuga", albums[3].Artist)
 	assert.Equal(t, 10.00, albums[3].Price)
+}
+
+func TestGetAlbumById(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	setupDate()
+
+	req, err := http.NewRequest(http.MethodGet, "/albums/1", nil)
+	if err != nil {
+		t.Fatalf("Could not create request: %v\n", err)
+	}
+
+	w := httptest.NewRecorder()
+
+	r := gin.Default()
+	r.GET("/albums/:id", getAlbumById)
+
+	r.ServeHTTP(w, req)
+
+	// ステータスコードの確認
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	// レスポンスの確認
+	expectedResponse := `{
+		"id": "1",
+		"title": "Old Album",
+		"artist": "Artist 1",
+		"price": 10.0
+	}`
+	assert.JSONEq(t, expectedResponse, w.Body.String())
 }
